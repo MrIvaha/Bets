@@ -40,9 +40,9 @@ namespace Ivaha.Bets.Model
                 var match   =   _PATTERN_NAMES.Match(name);
 
                 if (!match.Success || match.Groups.Count < 2)
-                    return  name;
+                    return  name.ToUpper();
 
-                return  _EXCLUSION_NAMES.Contains(match.Groups[1].Value.ToUpper()) ? name : match.Groups[1].Value;
+                return  (_EXCLUSION_NAMES.Contains(match.Groups[1].Value.ToUpper()) ? name : match.Groups[1].Value).ToUpper();
             };
 
             Func<string, Team>
