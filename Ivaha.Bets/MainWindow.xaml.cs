@@ -20,8 +20,12 @@ namespace Ivaha.Bets
     /// </summary>
     public partial class MainWindow : Window
     {
+        public  static  MainWindow  _MAIN_WINDOW  { get; private set; }
+
         public MainWindow()
         {
+            _MAIN_WINDOW    =   this;
+
             InitializeComponent();
         }
     }

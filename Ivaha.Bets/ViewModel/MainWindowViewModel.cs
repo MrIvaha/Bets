@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Xml;
 using System.Xml.Serialization;
+using Bluegrams.Application;
 using Ivaha.Bets.Model;
 using Microsoft.Win32;
 using OfficeOpenXml;
@@ -20,16 +22,112 @@ namespace Ivaha.Bets.ViewModel
 {
     public  class   MainWindowViewModel : ViewModelBase
     {
+        public  class   ComandNameGroup : ViewModelBase
+        {
+            const   byte            _MAX_CHARS_IN_GROUP_NAME        =   40;
+            const   string          _NAMES_DELIMITER                =   ",";
+
+            public  string          GroupName       { get; set; }
+            public  string          GroupValues     { get; set; }
+            public  List<string>    Names           { get; set; }
+            public  bool            IsReadOnly      { get; set; }   =   true;
+            public  Brush           Background      { get; set; }
+            public  bool            Focused         { get; set; }
+            public  double          TextBoxWidth    { get; set; }
+            public  Visibility      EditVisibility  { get; set; }
+            public  Visibility      SaveVisibility  { get; set; }   =   Visibility.Collapsed;
+
+            public                  ComandNameGroup () : base (Application.Current?.MainWindow, CommandOwnerType)
+            {
+                RegCommand(EditGroup        , editGroup         );
+                RegCommand(SaveGroup        , saveGroup         );
+                RegCommand(RemoveGroup      , removeGroup       );
+
+                PropertyChanged    +=   (s,e) =>
+                {
+                    switch (e.PropertyName)
+                    {
+                        case nameof(IsReadOnly):
+                            Background      =   IsReadOnly ? Brushes.Transparent : SystemColors.WindowBrush;
+                            EditVisibility  =   IsReadOnly ? Visibility.Visible : Visibility.Collapsed;
+                            SaveVisibility  =  !IsReadOnly ? Visibility.Visible : Visibility.Collapsed;
+
+                            if (!IsReadOnly)
+                            {
+                                GroupName   =   GroupValues;
+                                Focused     =   false;
+                                Focused     =   true;
+                            }
+                            else
+                            {
+                                GroupValues =   GroupName;
+                                GroupName   =   Truncate(GroupValues, _MAX_CHARS_IN_GROUP_NAME);
+                            }
+                            break;
+
+                        case nameof(GroupValues):
+                            Names           =   GroupValues.Split(new []{_NAMES_DELIMITER}, StringSplitOptions.RemoveEmptyEntries).Select(str => str.Trim()).ToList();
+                            GroupName       =   Truncate(GroupValues, _MAX_CHARS_IN_GROUP_NAME);
+
+                            MainWindowViewModel._VM.SaveSameNames();
+                            break;
+                    }
+                };
+            }
+
+            static  Type            CommandOwnerType    =   typeof(ComandNameGroup);
+
+            public RoutedUICommand  EditGroup           { get; }    =   new RoutedUICommand("Редактировать группу"  , "EditGroup"         , CommandOwnerType);
+            public RoutedUICommand  SaveGroup           { get; }    =   new RoutedUICommand("Сохранить изменения"   , "SaveGroup"         , CommandOwnerType);
+            public RoutedUICommand  RemoveGroup         { get; }    =   new RoutedUICommand("Удалить группу"        , "RemoveGroup"       , CommandOwnerType);
+
+            private void            editGroup           (object sender, ExecutedRoutedEventArgs e)  => IsReadOnly = false;
+            private void            saveGroup           (object sender, ExecutedRoutedEventArgs e)  => IsReadOnly = true;
+            private void            removeGroup         (object sender, ExecutedRoutedEventArgs e)
+            {
+                if (MessageBox.Show($"Вы действительно хотите убрать группу одноименных команд ({string.Join(", ", Names)})?", 
+                    MainControl?.Title, MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                    return;
+
+                _VM.Groups.Remove(this);
+            }
+
+            private static  string  Truncate            (string value, int maxChars)                =>  value.Length <= maxChars ? value : value.Substring(0, maxChars) + "...";
+        }
+
+        public  static  MainWindowViewModel _VM;
+
         public  string          SourceFileName      { get; set; }   //=   "source.xlsx";
         public  string          ResultFileName      { get; set; }   //=   "result.xlsx";
         public  string          Logs                { get; set; }   =   string.Empty;
+        public  ObservableCollection<ComandNameGroup>
+                                Groups              { get; set; }   =   new ObservableCollection<ComandNameGroup>();
 
         private Dictionary<string, Team>    Teams   =   new Dictionary<string, Team>();
+        private bool                        Loaded  =   false;
 
         public                  MainWindowViewModel () : base (Application.Current?.MainWindow, CommandOwnerType)
         {
+            _VM =   this;
+
             RegCommand(OpenFileDialog   , openFileDialog    );
             RegCommand(SaveFileDialog   , saveFileDialog    );
+
+            //PortableSettingsProvider.ApplyProvider(Properties.Settings.Default);
+            //Properties.Settings.Default.Reset();
+            ReadSameNames();
+
+            PropertyChanged    +=   (s,e) =>
+            {
+                switch (e.PropertyName)
+                {
+                    case nameof(Groups):
+                        SaveSameNames();
+                        break;
+                }
+            };
+
+            MainControl.Loaded +=   (s,e) => Loaded = true;
 
             ////////////////////
         ////Teams.Add("BLACKSTAR98"                                 , new Team("BLACKSTAR98"));
@@ -55,6 +153,28 @@ namespace Ivaha.Bets.ViewModel
             ////////////////////
         }
 
+        public  void            ReadSameNames       ()
+        {
+            foreach (var names in Properties.Settings.Default.SameNames.Split(new []{ Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                Groups.Add(new ComandNameGroup(){ GroupValues = names });
+        }
+        public  void            SaveSameNames       ()
+        {
+            if (!Loaded)
+                return;
+
+            try
+            {
+                Properties.Settings.Default.SameNames   =   string.Join(Environment.NewLine, Groups.Select(g => string.Join(", ", g.Names)));
+
+                if (!Properties.Settings.Default.Context.IsReadOnly)
+                    Properties.Settings.Default.Save();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
+        }
         private MessageBoxResult ShowMessageInvoke  (Window owner, string message, MessageBoxButton buttons = MessageBoxButton.OK)  =>  
             Application.Current?.Dispatcher.Invoke(() => owner == null 
                                                        ? MessageBox.Show(message, MainControl?.Title, buttons) 

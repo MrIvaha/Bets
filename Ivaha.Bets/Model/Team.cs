@@ -34,7 +34,7 @@ namespace Ivaha.Bets.Model
         public      virtual string[]            MakeWinnersAndLosers()  =>  WinnersAndLosers    =   Winners?.Where(t => Losers?.Contains(t) ?? false).Select(t => t.Name).ToArray() ?? new string[0];
         public      virtual string[]            MakeOnlyWinners     ()  =>  OnlyWinners         =   Winners?.Where(t => !(Losers?.Contains(t) ?? false)).Select(t => t.Name).ToArray()  ?? new string[0];
         public      virtual string[]            MakeOnlyLosers      ()  =>  OnlyLosers          =   Losers?.Where(t => !(Winners?.Contains(t) ?? false)).Select(t => t.Name).ToArray()  ?? new string[0];
-        public      virtual string[]            MakeOnlyTied        ()  =>  OnlyTied            =   Tied?/*.Where(t => !Losers.Contains(t) && !Winners.Contains(t))*/.Select(t => t.Name).ToArray()  ?? new string[0];
+        public      virtual string[]            MakeOnlyTied        ()  =>  OnlyTied            =   Tied?.Where(t => !Losers.Contains(t) || !Winners.Contains(t)).Select(t => t.Name).ToArray()  ?? new string[0];
         public              void                MakeAllLists        ()  =>  MakeListFuncs.ForEach(f => f.Invoke());
     }
 }

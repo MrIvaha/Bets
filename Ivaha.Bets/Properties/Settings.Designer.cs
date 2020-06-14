@@ -8,22 +8,43 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Ivaha.Bets.Properties
-{
-
-
+namespace Ivaha.Bets.Properties {
+    
+    
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "11.0.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase
-    {
-
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "15.9.0.0")]
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+        
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-
-        public static Settings Default
-        {
-            get
-            {
+        
+        public static Settings Default {
+            get {
                 return defaultInstance;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("SRL\r\nжен\r\nрез\r\nк\r\nбелые\r\nчерные\r\n\r\n6x6\r\n4х4\r\n4x4\r\n3х3\r\nD1S\r\nILY\r\nTSL\r\nPGM\r\nSLR\r\nK" +
+            "AB\r\nCFC")]
+        public string Exclusion {
+            get {
+                return ((string)(this["Exclusion"]));
+            }
+            set {
+                this["Exclusion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("MRJEY, MR.JEY, mr Jey\r\nBOULEVARD PROSPECT, BOULEVARD_PROSPECT")]
+        public string SameNames {
+            get {
+                return ((string)(this["SameNames"]));
+            }
+            set {
+                this["SameNames"] = value;
             }
         }
     }

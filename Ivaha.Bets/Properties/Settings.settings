@@ -1,7 +1,30 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="uri:settings" CurrentProfile="(Default)">
-  <Profiles>
-    <Profile Name="(Default)" />
-  </Profiles>
-  <Settings />
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Ivaha.Bets.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="Exclusion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">SRL
+жен
+рез
+к
+белые
+черные
+
+6x6
+4х4
+4x4
+3х3
+D1S
+ILY
+TSL
+PGM
+SLR
+KAB
+CFC</Value>
+    </Setting>
+    <Setting Name="SameNames" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MRJEY, MR.JEY, mr Jey
+BOULEVARD PROSPECT, BOULEVARD_PROSPECT</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>
