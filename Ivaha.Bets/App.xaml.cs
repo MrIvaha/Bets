@@ -12,7 +12,7 @@ namespace Ivaha.Bets
         {
             AppDomain.CurrentDomain.UnhandledException +=   (s,a) =>
             {
-                MessageBox.Show($"Unhandled error:{Environment.NewLine}{a.ExceptionObject.ToString()}");
+            ////MessageBox.Show($"Unhandled error:{Environment.NewLine}{a.ExceptionObject.ToString()}");
                 Log.Error(a.ExceptionObject as Exception);
             };
 

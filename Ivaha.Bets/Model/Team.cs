@@ -11,14 +11,14 @@ namespace Ivaha.Bets.Model
     {
         public  string                          Name                { get; set; }
 
-        public  ObservableCollection<Team>      Winners             { get; set; }
-        public  ObservableCollection<Team>      Losers              { get; set; }
-        public  ObservableCollection<Team>      Tied                { get; set; }
+        public              List<Team>          Winners             { get; set; }               =   new List<Team>();
+        public              List<Team>          Losers              { get; set; }               =   new List<Team>();
+        public              List<Team>          Tied                { get; set; }               =   new List<Team>();
 
-        public              string[]            WinnersAndLosers    { get; set; }
-        public              string[]            OnlyWinners         { get; set; }
-        public              string[]            OnlyLosers          { get; set; }
-        public              string[]            OnlyTied            { get; set; }
+        public              string[]            WinnersAndLosers    { get; protected set; }     =   new string[0];
+        public              string[]            OnlyWinners         { get; protected set; }     =   new string[0];
+        public              string[]            OnlyLosers          { get; protected set; }     =   new string[0];
+        public              string[]            OnlyTied            { get; protected set; }     =   new string[0];
 
         public              bool                IsBettable                                      =>  OnlyWinners.Length > 0 || OnlyLosers.Length > 0 || OnlyTied.Length > 0;
 
@@ -35,6 +35,6 @@ namespace Ivaha.Bets.Model
         public      virtual string[]            MakeOnlyWinners     ()  =>  OnlyWinners         =   Winners?.Where(t => !(Losers?.Contains(t) ?? false)).Select(t => t.Name).ToArray()  ?? new string[0];
         public      virtual string[]            MakeOnlyLosers      ()  =>  OnlyLosers          =   Losers?.Where(t => !(Winners?.Contains(t) ?? false)).Select(t => t.Name).ToArray()  ?? new string[0];
         public      virtual string[]            MakeOnlyTied        ()  =>  OnlyTied            =   Tied?/*.Where(t => !Losers.Contains(t) && !Winners.Contains(t))*/.Select(t => t.Name).ToArray()  ?? new string[0];
-        public              void                MakeLists           ()  =>  MakeListFuncs.ForEach(f => f.Invoke());
+        public              void                MakeAllLists        ()  =>  MakeListFuncs.ForEach(f => f.Invoke());
     }
 }
