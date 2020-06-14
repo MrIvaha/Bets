@@ -21,12 +21,19 @@ namespace Ivaha.Bets.Model
         static readonly Color   _WINERS_COLOR       =   Color.FromArgb(197, 224, 178);
         static readonly Color   _TIED_COLOR         =   Color.FromArgb(184, 204, 228);
 
+        static readonly string  _NAMES_DELIMITER    =   ",";
+
         static readonly List<string>    _EXCLUSION_NAMES    =   new List<string>();
+        static readonly Dictionary<string, List<string>>
+                                        _SAME_NAMES         =   new Dictionary<string, List<string>>();
         static readonly Regex           _PATTERN_NAMES      =   new Regex(@".*\((.+)\).*");
 
                 static          Excel               ()
         {
             _EXCLUSION_NAMES    =   Properties.Settings.Default.Exclusion.Split(new string[]{Environment.NewLine}, StringSplitOptions.None).Select(s => s.ToUpper()).ToList();
+            _SAME_NAMES         =   Properties.Settings.Default.SameNames.Split(new string[]{Environment.NewLine}, StringSplitOptions.None).Where(s => s.Contains(_NAMES_DELIMITER)).ToDictionary(
+                                    s => s.Split(new []{_NAMES_DELIMITER}, StringSplitOptions.None)[0].Trim().ToUpper(), 
+                                    s => s.Split(new []{_NAMES_DELIMITER}, StringSplitOptions.None).Select(str => str.Trim().ToUpper()).ToList());
         }
 
         public  static  void    ImportFromExcel     (out IEnumerable<Team> teams, string fileName, string messageCaption, Action<string> callback)
@@ -42,7 +49,9 @@ namespace Ivaha.Bets.Model
                 if (!match.Success || match.Groups.Count < 2)
                     return  name.ToUpper();
 
-                return  (_EXCLUSION_NAMES.Contains(match.Groups[1].Value.ToUpper()) ? name : match.Groups[1].Value).ToUpper();
+                var resName =   (_EXCLUSION_NAMES.Contains(match.Groups[1].Value.ToUpper()) ? name : match.Groups[1].Value).ToUpper();
+                var sameName=   _SAME_NAMES.Cast<Nullable<KeyValuePair<string, List<string>>>>().FirstOrDefault(n => n.Value.Value.Contains(resName));
+                return  sameName?.Key ?? resName;
             };
 
             Func<string, Team>
@@ -195,7 +204,10 @@ namespace Ivaha.Bets.Model
                     ws.Cells[range].Style.Font.Size             =   12;
                     ws.Cells[range].Style.HorizontalAlignment   =   OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     ws.Cells[range].Style.VerticalAlignment     =   OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
-                    ws.Cells[$"{c}{r}"].Value                   =   $"{t.Name})";
+                    ws.Cells[range].Style.WrapText              =   true;
+                    ws.Cells[$"{c}{r}"].Value                   =   _SAME_NAMES.ContainsKey(t.Name) 
+                                                                  ? string.Join(Environment.NewLine, _SAME_NAMES[t.Name].Select(s => $"{s})")) 
+                                                                  : $"{t.Name})";
                     ws.Cells[range].SetBackgroundColor(t.IsBettable == IsBettable.WinnersOrLosers ? _TEAM_COLOR2 : 
                                                        t.IsBettable == IsBettable.OnlyTied ? _TEAM_COLOR3 : _TEAM_COLOR1);
                 };
