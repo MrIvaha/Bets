@@ -4,9 +4,45 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Ivaha.Bets"
+        xmlns:viewModel="clr-namespace:Ivaha.Bets.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="SerjBets" Height="300" Width="500" ResizeMode="NoResize">
+
+    <Window.DataContext>
+        <viewModel:MainWindowViewModel/>
+    </Window.DataContext>
+    
+    <Window.Resources>
+        <Style x:Key="ControlStyle">
+            <Setter Property="FrameworkElement.VerticalAlignment" Value="Center"/>
+            <Setter Property="FrameworkElement.Margin" Value="5,2,5,2"/>
+        </Style>
+        <Style BasedOn="{StaticResource ControlStyle}" TargetType="{x:Type Button}"/>
+        <Style BasedOn="{StaticResource ControlStyle}" TargetType="{x:Type TextBox}"/>
+        <Style BasedOn="{StaticResource ControlStyle}" TargetType="{x:Type TextBlock}"/>
+        <Style BasedOn="{StaticResource ControlStyle}" TargetType="{x:Type CheckBox}">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+        <Style BasedOn="{StaticResource ControlStyle}" TargetType="{x:Type RadioButton}"/>
+    </Window.Resources>
+    
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock              Grid.Row="0" Grid.Column="0" Text="Исходный файл"/>
+        <TextBox                Grid.Row="0" Grid.Column="1" Text="{Binding SourceFileName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        <Button                 Grid.Row="0" Grid.Column="2" Content="…" Command="{Binding OpenFileDialog}" Margin="-6,2,5,2" Padding="0" Width="{Binding RelativeSource={RelativeSource Mode=Self}, Path=ActualHeight}"/>
+
+        <TextBlock              Grid.Row="1" Grid.Column="0" Text="Результирующий файл"/>
+        <TextBox                Grid.Row="1" Grid.Column="1" Text="{Binding ResultFileName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+        <Button                 Grid.Row="1" Grid.Column="2" Content="…" Command="{Binding SaveFileDialog}" Margin="-6,2,5,2" Padding="0" Width="{Binding RelativeSource={RelativeSource Mode=Self}, Path=ActualHeight}"/>
     </Grid>
 </Window>
