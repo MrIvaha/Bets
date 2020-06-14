@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml;
@@ -54,6 +55,12 @@ namespace Ivaha.Bets.ViewModel
             ////////////////////
         }
 
+        private MessageBoxResult ShowMessageInvoke  (Window owner, string message, MessageBoxButton buttons = MessageBoxButton.OK)  =>  
+            Application.Current?.Dispatcher.Invoke(() => owner == null 
+                                                       ? MessageBox.Show(message, MainControl?.Title, buttons) 
+                                                       : MessageBox.Show(owner, message, MainControl?.Title, buttons)) 
+            ?? MessageBoxResult.OK;
+
         #region Commands    |
 
         static  Type            CommandOwnerType    =   typeof(MainWindowViewModel);
@@ -91,7 +98,16 @@ namespace Ivaha.Bets.ViewModel
 
             ResultFileName  =   dlg.FileName;
 
-            Excel.ExportToExcel(Teams.Select(kvp => kvp.Value).ToArray(), ResultFileName, MainControl?.Title, onLog);
+            var cts         =   new CancellationTokenSource();
+            var token       =   cts.Token;
+            var caption     =   MainControl?.Title;
+
+            ProgressWindow.Run((aProgress, aCts, aToken, aWindow) =>
+            {
+                if (Excel.ExportToExcel(Teams.Select(kvp => kvp.Value).ToArray(), ResultFileName, caption, onLog, aToken))
+                    ShowMessageInvoke(aWindow, "Файл успешно сохранен");
+            }, cts, token,
+            (ex, win) => ShowMessageInvoke(win, $"Ошибка при сохранении файла:{Environment.NewLine}{ex.Message}"));
         }
         private void            onLog               (string message)
         {

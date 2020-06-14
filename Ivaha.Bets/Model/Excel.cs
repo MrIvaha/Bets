@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -47,7 +48,7 @@ namespace Ivaha.Bets.Model
                     try     { ws=   p.Workbook.Worksheets.Count > 0 ? p.Workbook.Worksheets[1] : null; }
                     catch   { ws=   p.Workbook.Worksheets.Count > 0 ? p.Workbook.Worksheets[1] : null; }
 
-                    callback?.Invoke("Excel document was successfully loaded");
+                    callback?.Invoke("Excel документ успешно загружен");
 
                     // Todo
                     var startRow=   5;
@@ -57,11 +58,11 @@ namespace Ivaha.Bets.Model
 
                     if (ws.Dimension.End.Row < startRow || ws.Dimension.End.Column < resCol)
                     {
-                        callback?.Invoke(" - Not enough rows or columns");
+                        callback?.Invoke(" - Недостаточное количество строк или колонок в документе");
                         return;
                     }
 
-                    callback?.Invoke(" - Required number of rows and columns were found");
+                    callback?.Invoke(" - Требуемое количество строк и колонок найдено");
 
                     Team    team1;
                     Team    team2;
@@ -98,8 +99,8 @@ namespace Ivaha.Bets.Model
 
                 teams           =   teams_.Select(kvp => kvp.Value).ToArray();
 
-                callback?.Invoke($" - {teams_.Count} teams were found");
-                callback?.Invoke($"   ...of which {teams.Count(t => t.IsBettable)} can be bet{Environment.NewLine}");
+                callback?.Invoke($" - {teams_.Count} команд было обнаружено");
+                callback?.Invoke($"   ...из которых на {teams.Count(t => t.IsBettable)} можно делать ставки{Environment.NewLine}");
             }
             catch (Exception ex)
             {
@@ -108,7 +109,7 @@ namespace Ivaha.Bets.Model
 
             ShowMessage("Файл успешно импортирован", messageCaption);
         }
-        public  static  void    ExportToExcel       (IEnumerable<Team> teams, string fileName, string messageCaption, Action<string> callback)
+        public  static  bool    ExportToExcel       (IEnumerable<Team> teams, string fileName, string messageCaption, Action<string> callback, CancellationToken token)
         {
             if (File.Exists(fileName))
                 try
@@ -118,7 +119,7 @@ namespace Ivaha.Bets.Model
                 catch (Exception ex)
                 {
                     ShowMessage("Ошибка при удалении существующего файла", messageCaption, ex);
-                    return;
+                    return  false;
                 }
 
             const   int     MIN_HEIGHT  =   4;
@@ -181,6 +182,8 @@ namespace Ivaha.Bets.Model
                 {
                     foreach (var team in teams)
                     {
+                        token.ThrowIfCancellationRequested();
+
                         var height  =   Math.Max(MIN_HEIGHT, team.OnlyTied.Length);
 
                         makeWinnersAndLosersCells(team, curRow, curCol);
@@ -201,6 +204,10 @@ namespace Ivaha.Bets.Model
                     for (var i = (byte)START_COL_ - CHAR_DELTA + 1; i <= end; i++)
                         ws.Column(i).AutoFit();
                 }
+                catch (OperationCanceledException)
+                {
+                    return  false;
+                }
                 catch (Exception ex)
                 {
                     ShowMessage("Ошибка при генерации файла", messageCaption, ex);
@@ -210,16 +217,16 @@ namespace Ivaha.Bets.Model
                 {
                     p.SaveAs(new FileInfo(fileName));
 
-                    callback?.Invoke($"{ws.Dimension.End.Row} rows were written to a file{Environment.NewLine}");
+                    callback?.Invoke($"{ws.Dimension.End.Row} строк записано в файл{Environment.NewLine}");
                 }
                 catch (Exception ex)
                 {
                     ShowMessage("Ошибка при сохранении файла", messageCaption, ex);
-                    return;
+                    return  false;
                 }
             }
 
-            ShowMessage("Файл успешно сохранен", messageCaption);
+            return  true;
         }
         private static  void    ShowMessage         (string message, string messageCaption, Exception ex = null)    =>  
             MessageBox.Show($"{message}{(ex == null ? "" : $":{Environment.NewLine}{ex.Message}")}", messageCaption);
