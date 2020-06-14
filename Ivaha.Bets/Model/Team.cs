@@ -20,7 +20,11 @@ namespace Ivaha.Bets.Model
         public              string[]            OnlyLosers          { get; protected set; }     =   new string[0];
         public              string[]            OnlyTied            { get; protected set; }     =   new string[0];
 
-        public              bool                IsBettable                                      =>  OnlyWinners.Length > 0 || OnlyLosers.Length > 0 || OnlyTied.Length > 0;
+        public              IsBettable          IsBettable                                      =>  OnlyWinners.Length > 0 || OnlyLosers.Length > 0 
+                                                                                                  ? IsBettable.WinnersOrLosers
+                                                                                                  : OnlyTied.Length > 0
+                                                                                                  ? IsBettable.OnlyTied
+                                                                                                  : IsBettable.None;
 
         protected   virtual List<Func<string[]>>MakeListFuncs       { get; }
 
@@ -36,5 +40,12 @@ namespace Ivaha.Bets.Model
         public      virtual string[]            MakeOnlyLosers      ()  =>  OnlyLosers          =   Losers?.Where(t => !(Winners?.Contains(t) ?? false)).Select(t => t.Name).ToArray()  ?? new string[0];
         public      virtual string[]            MakeOnlyTied        ()  =>  OnlyTied            =   Tied?.Where(t => !Losers.Contains(t) || !Winners.Contains(t)).Select(t => t.Name).ToArray()  ?? new string[0];
         public              void                MakeAllLists        ()  =>  MakeListFuncs.ForEach(f => f.Invoke());
+    }
+
+    public  enum    IsBettable
+    {
+        None            ,
+        OnlyTied        ,
+        WinnersOrLosers
     }
 }

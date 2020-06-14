@@ -16,6 +16,7 @@ namespace Ivaha.Bets.Model
     {
         static readonly Color   _TEAM_COLOR1        =   Color.FromArgb(251, 228, 213);
         static readonly Color   _TEAM_COLOR2        =   Color.FromArgb(226, 239, 217);
+        static readonly Color   _TEAM_COLOR3        =   Color.FromArgb(197, 217, 241);
         static readonly Color   _WINERSLOSERS_COLOR =   Color.FromArgb(248, 203, 172);
         static readonly Color   _WINERS_COLOR       =   Color.FromArgb(197, 224, 178);
         static readonly Color   _TIED_COLOR         =   Color.FromArgb(184, 204, 228);
@@ -129,7 +130,7 @@ namespace Ivaha.Bets.Model
                 teams           =   teams_.Select(kvp => kvp.Value).ToArray();
 
                 callback?.Invoke($" - {teams_.Count} команд было обнаружено");
-                callback?.Invoke($"   ...из которых на {teams.Count(t => t.IsBettable)} можно делать ставки{Environment.NewLine}");
+                callback?.Invoke($"   ...из которых на {teams.Count(t => t.IsBettable != IsBettable.None)} можно делать ставки{Environment.NewLine}");
             }
             catch (Exception ex)
             {
@@ -195,7 +196,8 @@ namespace Ivaha.Bets.Model
                     ws.Cells[range].Style.HorizontalAlignment   =   OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     ws.Cells[range].Style.VerticalAlignment     =   OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     ws.Cells[$"{c}{r}"].Value                   =   $"{t.Name})";
-                    ws.Cells[range].SetBackgroundColor(t.IsBettable ? _TEAM_COLOR2 : _TEAM_COLOR1);
+                    ws.Cells[range].SetBackgroundColor(t.IsBettable == IsBettable.WinnersOrLosers ? _TEAM_COLOR2 : 
+                                                       t.IsBettable == IsBettable.OnlyTied ? _TEAM_COLOR3 : _TEAM_COLOR1);
                 };
                 Action<Team, int, char>
                     makeTiedCells               =   (t, r, c) =>
