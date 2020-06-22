@@ -161,18 +161,16 @@ namespace Ivaha.Bets.Model
                     return  false;
                 }
 
-            const   int     MIN_HEIGHT  =   4;
-            const   int     MIN_WIDTH   =   19;
-            const   int     START_ROW   =   3;
-            const   int     START_COL   =   1;
-            const   int     CHAR_DELTA  =   (byte)'A';
-            const   char    START_COL_  =   (char)(START_COL + CHAR_DELTA);
+            int     MIN_HEIGHT  =   4;
+            int     MIN_WIDTH   =   19;
+            int     START_ROW   =   3;
+            int     START_COL   =   1;
 
             using (var  p       =   new ExcelPackage())
             {
                 var     ws      =   p.Workbook.Worksheets.Add("Result");
                 var     curRow  =   START_ROW;
-                var     curCol  =   START_COL_;
+                var     curCol  =   START_COL;
                 var     width   =   Math.Max(MIN_WIDTH, teams.Max(t => Math.Max(t.WinnersAndLosers.Length + t.OnlyWinners.Length, 
                                                                                 t.WinnersAndLosers.Length + t.OnlyLosers.Length)));
 
@@ -181,8 +179,8 @@ namespace Ivaha.Bets.Model
                 {
                     for (var i = 0; i < t.WinnersAndLosers.Length; i++)
                     {
-                        ws.Cells[$"{(char)(c + i)}{r}"].Value   =   t.WinnersAndLosers[i];
-                        ws.Cells[$"{(char)(c + i)}{r}"].SetBackgroundColor(_WINERSLOSERS_COLOR);
+                        ws.Cells[$"{(c + i).ToExcelColumn()}{r}"].Value =   t.WinnersAndLosers[i];
+                        ws.Cells[$"{(c + i).ToExcelColumn()}{r}"].SetBackgroundColor(_WINERSLOSERS_COLOR);
                     }
                 };
                 Action<Team, int, int, bool>
@@ -191,33 +189,33 @@ namespace Ivaha.Bets.Model
                     var arr =   isWinners ? t.OnlyWinners : t.OnlyLosers;
                     for (var i = 0; i < arr.Length; i++)
                     {
-                        ws.Cells[$"{(char)(width + START_COL - i + CHAR_DELTA - 1)}{r}"].Value   =   arr[i];
-                        ws.Cells[$"{(char)(width + START_COL - i + CHAR_DELTA - 1)}{r}"].SetBackgroundColor(t.OnlyTied.Contains(arr[i]) ? _TIED_COLOR : _WINERS_COLOR);
+                        ws.Cells[$"{(width + START_COL - i - 1).ToExcelColumn()}{r}"].Value =   arr[i];
+                        ws.Cells[$"{(width + START_COL - i - 1).ToExcelColumn()}{r}"].SetBackgroundColor(t.OnlyTied.Contains(arr[i]) ? _TIED_COLOR : _WINERS_COLOR);
                     }
                 };
-                Action<Team, int, char, int>
+                Action<Team, int, int, int>
                     makeTeamCells               =   (t, r, c, h) =>
                 {
-                    var     range                               =   $"{c}{r}:{(char)(c + width - 1)}{r + h - 1}";
+                    var     range                               =   $"{c.ToExcelColumn()}{r}:{(c + width - 1).ToExcelColumn()}{r + h - 1}";
                     ws.Cells[range].Merge                       =   true;
                     ws.Cells[range].Style.Font.Bold             =   true;
                     ws.Cells[range].Style.Font.Size             =   12;
                     ws.Cells[range].Style.HorizontalAlignment   =   OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                     ws.Cells[range].Style.VerticalAlignment     =   OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
                     ws.Cells[range].Style.WrapText              =   true;
-                    ws.Cells[$"{c}{r}"].Value                   =   _SAME_NAMES.ContainsKey(t.Name) 
+                    ws.Cells[$"{c.ToExcelColumn()}{r}"].Value   =   _SAME_NAMES.ContainsKey(t.Name) 
                                                                   ? string.Join(Environment.NewLine, _SAME_NAMES[t.Name].Select(s => $"{s})")) 
                                                                   : $"{t.Name})";
                     ws.Cells[range].SetBackgroundColor(t.IsBettable == IsBettable.WinnersOrLosers ? _TEAM_COLOR2 : 
                                                        t.IsBettable == IsBettable.OnlyTied ? _TEAM_COLOR3 : _TEAM_COLOR1);
                 };
-                Action<Team, int, char>
+                Action<Team, int, int>
                     makeTiedCells               =   (t, r, c) =>
                 {
                     for (var i = 0; i < t.OnlyTied.Length; i++)
                     {
-                        ws.Cells[$"{c}{r + i}"].Value   =   t.OnlyTied[i];
-                        ws.Cells[$"{c}{r + i}"].SetBackgroundColor(_TIED_COLOR);
+                        ws.Cells[$"{c.ToExcelColumn()}{r + i}"].Value   =   t.OnlyTied[i];
+                        ws.Cells[$"{c.ToExcelColumn()}{r + i}"].SetBackgroundColor(_TIED_COLOR);
                     }
                 };
 
@@ -234,7 +232,7 @@ namespace Ivaha.Bets.Model
 
                         curRow     +=   1;
                         makeTeamCells(team, curRow, curCol, height);
-                        makeTiedCells(team, curRow, (char)((byte)START_COL_ + width));
+                        makeTiedCells(team, curRow, START_COL + width);
 
                         curRow     +=   height;
                         makeWinnersAndLosersCells(team, curRow, curCol);
@@ -243,8 +241,8 @@ namespace Ivaha.Bets.Model
                         curRow     +=   2;
                     }
 
-                    var end =   (byte)START_COL_ + width - CHAR_DELTA + 1;
-                    for (var i = (byte)START_COL_ - CHAR_DELTA + 1; i <= end; i++)
+                    var end =   START_COL + width + 1;
+                    for (var i = START_COL + 1; i <= end; i++)
                         ws.Column(i).AutoFit();
                 }
                 catch (OperationCanceledException)
@@ -282,5 +280,21 @@ namespace Ivaha.Bets.Model
             range.Style.Fill.PatternType    =   OfficeOpenXml.Style.ExcelFillStyle.Solid;
             range.Style.Fill.BackgroundColor.SetColor(color);
         }
+        public  static string   ToExcelColumn       (this int i)    =>  OfficeOpenXml.ExcelCellAddress.GetColumnLetter(i + 1);
+    //{
+    //    var column      =   string.Empty;
+    //    i              +=   1;
+
+    //    if (i / 26m > 1)
+    //    {
+    //        var letter  =   i / 26;
+    //        column      =   ((char)(65 + letter - 1)).ToString();
+    //        i          -=   letter * 26;
+    //    }
+
+    //    column         +=   ((char)(65 + i - 1)).ToString();
+
+    //    return  column;
+    //}
     }
 }

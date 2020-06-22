@@ -15,6 +15,7 @@ namespace Ivaha.Bets
             if (fileInfo.Exists)
                 XmlConfigurator.ConfigureAndWatch(fileInfo);
         }
+        public  static  void        Init        (){ }
 
         private static  ILog        logger          =   LogManager.GetLogger("Ivaha.Bets");
 

@@ -10,11 +10,9 @@ namespace Ivaha.Bets
     {
         protected  override void    OnStartup   (StartupEventArgs e)
         {
-            AppDomain.CurrentDomain.UnhandledException +=   (s,a) =>
-            {
-            ////MessageBox.Show($"Unhandled error:{Environment.NewLine}{a.ExceptionObject.ToString()}");
-                Log.Error(a.ExceptionObject as Exception);
-            };
+            Log.Init();
+            AppDomain.CurrentDomain.UnhandledException     +=   (s,a) =>    Log.Error(a.ExceptionObject as Exception);
+            AppDomain.CurrentDomain.FirstChanceException   +=   (s,a) =>    Log.Error(a.Exception as Exception);
 
             base.OnStartup(e);
         }
