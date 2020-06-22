@@ -252,6 +252,7 @@ namespace Ivaha.Bets.Model
                 catch (Exception ex)
                 {
                     ShowMessage("Ошибка при генерации файла", messageCaption, ex);
+                    return  false;
                 }
 
                 try
